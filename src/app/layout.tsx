@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const archivoFont = Archivo({
+  weight: ['400','700'],
+  style: ['normal'],
+  subsets: ['latin']
+})
 
 export const metadata: Metadata = {
   title: "Apply Digital Test",
@@ -16,7 +22,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={archivoFont.className}>
+        <Header/>
+
+        <main className="mx-auto max-w-7xl">
+          {children}
+        </main>
+
+        <Footer/>
+      </body>
     </html>
   );
 }
