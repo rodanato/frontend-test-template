@@ -15,7 +15,9 @@ const config: Config = {
       },
     },
     colors: {
+      white: '#fff',
       gray: '#eeeeee',
+      mediumgray: '#737373',
       darkgray: '#404040',
     },
   },

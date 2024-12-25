@@ -3,12 +3,7 @@ import { Archivo } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-
-const archivoFont = Archivo({
-  weight: ['400','700'],
-  style: ['normal'],
-  subsets: ['latin']
-})
+import { archivoFont } from "@/utils/fonts";
 
 export const metadata: Metadata = {
   title: "Apply Digital Test",
@@ -25,7 +20,7 @@ export default function RootLayout({
       <body className={archivoFont.className}>
         <Header/>
 
-        <main className="mx-auto max-w-7xl">
+        <main className="px-4 xl:p-0">
           {children}
         </main>
 

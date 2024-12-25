@@ -1,141 +1,187 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GameCard } from "@/components/game-card";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const games = [
-  {
-    id: 1,
-    title: "Elden Ring",
-    genre: "Action RPG",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 2,
-    title: "Hollow Knight",
-    genre: "Metroidvania",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 3,
-    title: "Fortnite",
-    genre: "Battle Royale",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 4,
-    title: "Destiny 2",
-    genre: "FPS",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 5,
-    title: "Counter Strike 2",
-    genre: "FPS",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 6,
-    title: "Apex Legends",
-    genre: "Battle Royale",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 7,
-    title: "Little Nightmares",
-    genre: "Horror",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: true,
-  },
-  {
-    id: 8,
-    title: "Dead by Daylight",
-    genre: "Horror",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 9,
-    title: "Grand Theft Auto V",
-    genre: "Action",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: true,
-  },
-  {
-    id: 10,
-    title: "Helldivers",
-    genre: "Shooter",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: true,
-  },
-  {
-    id: 11,
-    title: "Fallout 4",
-    genre: "RPG",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: false,
-  },
-  {
-    id: 12,
-    title: "Call of Duty: Warzone",
-    genre: "Battle Royale",
-    price: 119,
-    imageUrl: "/game-images/amongus.jpeg",
-    isNew: true,
-  },
-];
+interface Game {
+  id: number;
+  name: string;
+  genre: string;
+  price: number;
+  image: string;
+  isNew: boolean;
+}
 
-export default async function Home() {
+interface Config {
+  genre: string;
+  page: string;
+  totalPages: string;
+  genres: string[];
+}
+
+export default function Home() {
+  const config = useRef<Config>({
+    genre: "",
+    page: "1",
+    totalPages: "1",
+    genres: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [gamesList, setGames] = useState<Game[]>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const getGames = useCallback(async () => {
+    try {
+      const params = getParams();
+      const req = await fetch("/api/games?" + params, { cache: "force-cache" });
+      const data = await req.json();
+      return data;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setTimeout(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      }, 300);
+    }
+  }, []);
+
+  function getParams() {
+    const { genre, page } = config.current;
+    return `&genre=${genre}&page=${page}`;
+  }
+
+  function updateUrl() {
+    const { genre, page } = config.current;
+    router.push(`?genre=${genre}&page=${page}`);
+  }
+
+  function getUrl() {
+    const genre = searchParams.get("genre");
+    const page = searchParams.get("page");
+    return { page, genre };
+  }
+
+  async function requestGames() {
+    setIsLoading(true);
+    const data = await getGames();
+    const newGames = data.games;
+    const isOnFirstPage = config.current.page === "1";
+    const newValues = isOnFirstPage ? newGames : [...gamesList, ...newGames];
+    setGames(newValues);
+    setIsLoading(false);
+  }
+
+  function mustHideSeeMore(): boolean {
+    const { page, totalPages, genre } = config.current;
+    return +page === +totalPages || genre !== "";
+  }
+
+  function updateConfig(newConfig: Partial<Config>) {
+    config.current = {
+      ...config.current,
+      ...newConfig,
+    };
+
+    requestGames();
+    updateUrl();
+  }
+
+  function seeMore() {
+    const newPage = +config.current.page + Number(1);
+    updateConfig({ page: newPage.toString() });
+  }
+
+  function changeGenre(e: any) {
+    const selectedGenre = e.target.value;
+    updateConfig({
+      page: "1",
+      genre: selectedGenre,
+    });
+  }
+
+  useEffect(
+    function onInit() {
+      async function getGamesAsync() {
+        const { totalPages, availableFilters } = await getGames();
+        const { genre } = getUrl();
+
+        updateConfig({
+          genres: availableFilters,
+          totalPages,
+          genre: genre ?? config.current.genre,
+          page: "1",
+        });
+      }
+
+      getGamesAsync();
+    },
+    [getGames, setGames]
+  );
+
   return (
-    <div className="container mx-auto px-4 py-12 text-darkgray">
-      <h1 className="text-4xl font-bold w-full mb-16 ">Top Sellers</h1>
+    <>
+      <header className="w-full border-b border-gray">
+        <div className="container mx-auto max-w-7xl">
+          <h1 className="text-4xl font-bold w-full mb-16 mt-12 ">
+            Top Sellers
+          </h1>
 
-      <div className="w-full flex justify-end">
-        <div className="flex items-center gap-2">
-          <span className="text-xl text-muted-foreground font-bold">Genre</span>
-          <hr className="w-[1px] h-4 border-0 bg-darkgray my-0 mr-2 ml-1" />
+          <div className="w-full flex justify-start sm:justify-end">
+            <div className="flex items-center gap-2 mb-14">
+              <span className="text-xl text-muted-foreground font-bold">
+                Genre
+              </span>
+              <hr className="w-[1px] h-4 border-0 bg-darkgray my-0 mr-2 ml-1" />
 
-          <select className="text-xl">
-            <option value="all">All</option>
-            <option value="action">Action</option>
-            <option value="rpg">RPG</option>
-            <option value="fps">FPS</option>
-            <option value="horror">Horror</option>
-            <option value="battle-royale">Battle Royale</option>
-          </select>
+              <select
+                className="text-xl"
+                onChange={changeGenre}
+                value={config.current.genre}
+              >
+                <option value="">All</option>
+                {config.current.genres.map((genre, i) => (
+                  <option key={`${genre}-${i}`} value={genre.toLowerCase()}>
+                    {genre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {games.map((game) => (
-          <GameCard
-            key={game.id}
-            title={game.title}
-            genre={game.genre}
-            price={game.price}
-            imageUrl={game.imageUrl}
-            isNew={game.isNew}
-          />
-        ))}
-      </div>
+      <div className="mx-auto max-w-7xl py-12 text-darkgray">
+        {isLoading && config.current.page === "1" ? (
+          <div className="w-full flex justify-center py-4">
+            <div className="loader"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {gamesList.map((game) => (
+              <GameCard
+                key={game.id}
+                name={game.name}
+                genre={game.genre}
+                price={game.price}
+                imageUrl={game.image}
+                isNew={game.isNew}
+              />
+            ))}
+          </div>
+        )}
 
-      <div className="flex justify-center mt-8">
-        <button>SEE MORE</button>
+        {!mustHideSeeMore() && (
+          <div className="flex justify-start mt-8">
+            <button
+              className="w-full sm:w-32 h-14 rounded-md bg-darkgray text-white"
+              onClick={seeMore}
+            >
+              SEE MORE
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
