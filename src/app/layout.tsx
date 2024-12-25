@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { archivoFont } from "@/utils/fonts";
+import { CartProvider } from "@/context/cart-context";
 
 export const metadata: Metadata = {
   title: "Apply Digital Test",
@@ -18,13 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={archivoFont.className}>
-        <Header/>
+        <CartProvider>
+          <Header />
 
-        <main className="px-4 xl:p-0">
-          {children}
-        </main>
+          <main className="px-4 xl:p-0">{children}</main>
 
-        <Footer/>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 
-/* HTML: <div class="loader"></div> */
+main {
+  min-height: calc(100vh - 284px);
+}
+
 .loader {
   width: 90px;
   height: 14px;

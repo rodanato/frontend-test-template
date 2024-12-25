@@ -161,6 +161,7 @@ export default function Home() {
             {gamesList.map((game) => (
               <GameCard
                 key={game.id}
+                id={game.id}
                 name={game.name}
                 genre={game.genre}
                 price={game.price}
